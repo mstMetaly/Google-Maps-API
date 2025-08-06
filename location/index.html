@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Location Tracker (Google Geolocation API)</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #map {
+            height: 500px;
+            width: 80%;
+            max-width: 800px;
+            border: 2px solid black;
+            border-radius: 10px;
+        }
+
+        #status {
+            margin: 10px;
+            font-size: 18px;
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Live Location Tracker 🌍 (Google API)</h2>
+    <p id="status">Fetching your location...</p>
+    <div id="map"></div>
+
+    <!-- Google Maps script loaded asynchronously -->
+    <script>
+        function loadGoogleMapsScript() {
+            if (!window.google) {
+                const script = document.createElement("script");
+                script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyB1UOBnfU2NMx2soTgoz1BqhcA2jkhzflA&callback=initMap";
+                script.async = true;
+                script.defer = true;
+                document.body.appendChild(script);
+            }
+        }
+
+        let map;
+        let marker;
+
+        function initMap() {
+            // Default map center
+            const defaultLocation = { lat: 23.8103, lng: 90.4125 }; // Dhaka, Bangladesh
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: defaultLocation,
+                zoom: 13
+            });
+
+            marker = new google.maps.Marker({
+                position: defaultLocation,
+                map: map,
+                title: "Your Location"
+            });
+
+            // Get real-time location using Google API
+            fetchGoogleLocation();
+        }
+
+        function fetchGoogleLocation() {
+            fetch("https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyCdGYCiuK7C2i7wUNZCtccjxUhtuhTYskE", {
+                method: "POST",
+                body: JSON.stringify({
+                    //considerIp: true,
+                    //wifiAccessPoints: [], // Force Wi-Fi-based location accuracy
+                    //cellTowers: [] // Improve accuracy with cell tower triangulation
+                })
+
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const latitude = data.location.lat;
+                    const longitude = data.location.lng;
+                    updateMap(latitude, longitude);
+
+                    // Fetch accurate city, region, and country details using Google Reverse Geocoding
+                    fetch("https://ipapi.co/json/")
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log("City:", data.city);
+                            console.log("Region:", data.region);
+                            console.log("Country:", data.country_name);
+                            console.log("Latitude:", data.latitude);
+                            console.log("Longitude:", data.longitude);
+                        })
+                        .catch(error => console.error("IP-based location error:", error));
+
+                    setTimeout(fetchGoogleLocation, 5000); // Refresh every 5 seconds
+                })
+                .catch(error => {
+                    console.error("Google API error:", error);
+                    document.getElementById("status").innerText = "Unable to retrieve location.";
+                });
+        }
+
+        function updateMap(latitude, longitude) {
+            document.getElementById("status").innerText = `Latitude: ${latitude}, Longitude: ${longitude}`;
+            const userLocation = { lat: latitude, lng: longitude };
+
+            map.setCenter(userLocation);
+            marker.setPosition(userLocation);
+        }
+
+        // Load Google Maps script when the page loads
+        window.onload = loadGoogleMapsScript;
+    </script>
+
+</body>
+
+</html>

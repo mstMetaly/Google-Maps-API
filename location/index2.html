@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Location Tracker (Google Geolocation API)</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #location {
+            font-size: 18px;
+            margin-top: 10px;
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Live Location Tracker 🌍 (Google API)</h2>
+    <p id="status">Fetching your location...</p>
+    <p id="location">Latitude: -- | Longitude: --</p>
+    <p id="accuracy">Accuracy: </p>
+    <p id="error"></p>
+    <p id="city"></p>
+    <p id="district"></p>
+    <p id="region"></p>
+    <p id="country"></p>
+
+
+    <script>
+        // Check Geolocation Permission
+        navigator.permissions.query({ name: 'geolocation' }).then(function (result) {
+            console.log("Geolocation Permission:", result.state);
+        });
+
+        if ("geolocation" in navigator) {
+            navigator.geolocation.watchPosition(
+                (position) => {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+
+                    console.log("GPS Latitude:", latitude);
+                    console.log("GPS Longitude:", longitude);
+                    console.log("Accuracy (meters):", accuracy);
+
+                    // Update the page with coordinates
+                    document.getElementById("status").innerText = `Location fetched successfully!`;
+                    document.getElementById("location").innerText = `Latitude: ${latitude} | Longitude: ${longitude}`;
+                    document.getElementById("accuracy").innerText = `Accuracy: ${accuracy} meters`;
+
+                },
+                (error) => {
+                    console.error("Geolocation error:", error.message);
+                    document.getElementById("status").innerText = "Error fetching location!";
+                    document.getElementById("error").innerText = `Error: ${error.message}`;
+                },
+                {
+                    enableHighAccuracy: true, // Forces GPS mode
+                    timeout: 20000, // Allows more time to get a GPS lock
+                    maximumAge: 0 // Always fetch fresh location
+                }
+            );
+        } else {
+            console.log("Geolocation is not supported by this browser.");
+            document.getElementById("status").innerText = "Geolocation is not supported.";
+        }
+
+
+
+    </script>
+
+</body>
+
+</html>
