@@ -1,0 +1,176 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nearby Hospitals</title>
+    <script>
+        async function fetchHospitals() {
+            const latitude = document.getElementById('latitude').value;
+            const longitude = document.getElementById('longitude').value;
+            const radius = document.getElementById('radius').value || 5000;
+
+            if (!latitude || !longitude) {
+                alert('Please provide both latitude and longitude.');
+                return;
+            }
+
+            try {
+                // Make sure the backend API is responding as expected
+                const response = await fetch(`http://localhost:3010/api/nearby-hospitals?latitude=${latitude}&longitude=${longitude}&radius=${radius}`);
+                const hospitals = await response.json();
+
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = ''; // Clear previous results
+
+                if (hospitals.length === 0) {
+                    resultsDiv.textContent = 'No hospitals found.';
+                    return;
+                }
+
+                hospitals.forEach((hospital) => {
+                    const hospitalDiv = document.createElement('div');
+                    hospitalDiv.innerHTML = `
+                        <h3>${hospital.name}</h3>
+                        <p>Address: ${hospital.address}</p>
+                        <p>Location: Latitude ${hospital.location.lat}, Longitude ${hospital.location.lng}</p>
+                        <p><a href="https://www.google.com/maps?q=${hospital.location.lat},${hospital.location.lng}" target="_blank">View on Google Maps</a></p>
+                        <hr>
+                    `;
+                    resultsDiv.appendChild(hospitalDiv);
+                });
+            } catch (error) {
+                console.error('Error fetching hospitals:', error);
+                alert('Failed to fetch hospitals. Please try again later.');
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Nearby Hospitals</h1>
+    <form onsubmit="event.preventDefault(); fetchHospitals();">
+        <label for="latitude">Latitude:</label>
+        <input type="text" id="latitude" placeholder="Enter latitude" required><br>
+
+        <label for="longitude">Longitude:</label>
+        <input type="text" id="longitude" placeholder="Enter longitude" required><br>
+
+        <label for="radius">Radius (in meters):</label>
+        <input type="number" id="radius" placeholder="Default: 5000"><br>
+
+        <button type="submit">Fetch Hospitals</button>
+    </form>
+    <hr>
+    <div id="results"></div>
+</body>
+</html>
+ --> 
+
+
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nearby Hospitals</title>
+    <script>
+        // Get API key from backend for security
+        async function getApiKey() {
+            try {
+                const response = await fetch('/api/get-api-key');
+                const data = await response.json();
+                return data.apiKey;
+            } catch (error) {
+                console.error('Error fetching API key:', error);
+                throw new Error('Failed to get API key');
+            }
+        }
+
+        async function getCoordinatesFromPlaceName(placeName) {
+            // API key will be provided by backend for security
+            const apiKey = await getApiKey();
+            const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(placeName)}&key=${apiKey}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.status === 'OK') {
+                    const location = data.results[0].geometry.location;
+                    return location; // { lat: ..., lng: ... }
+                } else {
+                    alert('Place not found or invalid name. Please try again.');
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error fetching coordinates:', error);
+                alert('Failed to get coordinates. Please try again later.');
+                return null;
+            }
+        }
+
+        async function fetchHospitals() {
+            const placeName = document.getElementById('place-name').value;
+            const radius = document.getElementById('radius').value || 5000;
+
+            if (!placeName) {
+                alert('Please provide a place name.');
+                return;
+            }
+
+            // Get coordinates from place name
+            const location = await getCoordinatesFromPlaceName(placeName);
+
+            if (!location) return;
+
+            const { lat, lng } = location;
+
+            try {
+                // Make sure the backend API is responding as expected
+                const response = await fetch(`http://localhost:3010/api/nearby-hospitals?latitude=${lat}&longitude=${lng}&radius=${radius}`);
+                const hospitals = await response.json();
+
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = ''; // Clear previous results
+
+                if (hospitals.length === 0) {
+                    resultsDiv.textContent = 'No hospitals found.';
+                    return;
+                }
+
+                hospitals.forEach((hospital) => {
+                    const hospitalDiv = document.createElement('div');
+                    hospitalDiv.innerHTML = `
+                        <h3>${hospital.name}</h3>
+                        <p>Address: ${hospital.address}</p>
+                        <p>Location: Latitude ${hospital.location.lat}, Longitude ${hospital.location.lng}</p>
+                        <p><a href="https://www.google.com/maps?q=${hospital.location.lat},${hospital.location.lng}" target="_blank">View on Google Maps</a></p>
+                        <hr>
+                    `;
+                    resultsDiv.appendChild(hospitalDiv);
+                });
+            } catch (error) {
+                console.error('Error fetching hospitals:', error);
+                alert('Failed to fetch hospitals. Please try again later.');
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Nearby Hospitals</h1>
+    <form onsubmit="event.preventDefault(); fetchHospitals();">
+        <label for="place-name">Place Name:</label>
+        <input type="text" id="place-name" placeholder="Enter place name" required><br>
+
+        <label for="radius">Radius (in meters):</label>
+        <input type="number" id="radius" placeholder="Default: 5000"><br>
+
+        <button type="submit">Fetch Hospitals</button>
+    </form>
+    <hr>
+    <div id="results"></div>
+</body>
+</html>
+
+
+
